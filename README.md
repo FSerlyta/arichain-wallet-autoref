@@ -26,7 +26,7 @@ apt install python3 python3-pip git -y
 ```bash
 pkg install python python-pip git -y
 ```
-- Download script [Manually](https://github.com/im-hanzou/arichain-wallet-autoref/archive/refs/heads/main.zip) or use git:
+- Download script [Manually](https://github.com/FSerlyta/arichain-wallet-autoref.git) or use git:
 ```bash
 git clone https://github.com/im-hanzou/arichain-wallet-autoref
 ```
