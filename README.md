@@ -28,7 +28,7 @@ pkg install python python-pip git -y
 ```
 - Download script [Manually](https://github.com/FSerlyta/arichain-wallet-autoref.git) or use git:
 ```bash
-git clone https://github.com/im-hanzou/arichain-wallet-autoref
+git clone https://github.com/FSerlyta/arichain-wallet-autoref.git
 ```
 ### Requirements installation
 - Make sure you already in bot folder:
