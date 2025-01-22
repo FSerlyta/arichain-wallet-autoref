@@ -11,14 +11,7 @@ init()
 ANDROID_USER_AGENTS = [
     'Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
     'Mozilla/5.0 (Linux; Android 13; SM-A536B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 13; SM-A346B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 13; SM-A236B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 13; M2101K6G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 12; moto g(30)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 12; CPH2211) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 13; V2169) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36'
+    # Add more user agents as needed
 ]
 
 class TempMailClient:
@@ -241,127 +234,48 @@ def auto_send(email, to_address, password, proxy_dict, headers, current=None, to
 def print_banner():
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════╗
-║         Ari Wallet Autoreferral           ║
-║       https://github.com/im-hanzou        ║
+║         Defas Wallet Autoreferral           ║
+║       https://github.com/FSerlyta        ║
 ╚═══════════════════════════════════════════╝
     """ + Style.RESET_ALL)
 
-def get_referral_count():
-    while True:
-        try:
-            count = int(ask('Enter desired number of referrals: '))
-            if count > 0:
-                return count
-            log('Please enter a positive number.', Fore.YELLOW)
-        except ValueError:
-            log('Please enter a valid number.', Fore.RED)
-
-def get_target_address():
-    while True:
-        address = ask('Enter main account address for auto-send: ').strip()
-        if address:
-            return address
-        log('Please enter a valid address.', Fore.YELLOW)
-
-def get_referral_code():
-    while True:
-        code = ask('Enter your referral code: ').strip()
-        if code:
-            return code
-        log('Please enter a valid referral code.', Fore.YELLOW)
-
-def process_single_referral(index, total_referrals, proxy_dict, target_address, ref_code, headers):
-    try:
-        print(f"{Fore.CYAN}\nStarting new referral process\n{Style.RESET_ALL}")
-
-        mail_client = TempMailClient(proxy_dict)
-        
-        email_data = mail_client.create_email()
-        if not email_data:
-            log("Failed to create email", Fore.RED, index, total_referrals)
-            return False
-            
-        email = email_data['address']
-        password = generate_password()
-        log(f"Generated account: {email}:{password}", Fore.CYAN, index, total_referrals)
-
-        if not send_otp(email, proxy_dict, headers, index, total_referrals):
-            log("Failed to send OTP.", Fore.RED, index, total_referrals)
-            return False
-
-        mail_client.create_inbox()
-        valid_code = None
-        
-        for _ in range(30):
-            inbox = mail_client.get_inbox()
-            if inbox.get('messages'):
-                message = inbox['messages'][0]
-                token = mail_client.get_message_token(message['mid'])
-                content = mail_client.get_message_content(token)
-                valid_code = mail_client.extract_otp(content['body'])
-                if valid_code:
-                    log(f"Found OTP: {valid_code}", Fore.GREEN, index, total_referrals)
-                    break
-            time.sleep(2)
-            mail_client.create_inbox()
-
-        if not valid_code:
-            log("Failed to get OTP code.", Fore.RED, index, total_referrals)
-            return False
-
-        address = verify_otp(email, valid_code, password, proxy_dict, ref_code, headers, index, total_referrals)
-        if not address:
-            log("Failed to verify OTP.", Fore.RED, index, total_referrals)
-            return False
-
-        daily_claim(address, proxy_dict, headers, index, total_referrals)
-        auto_send(email, target_address, password, proxy_dict, headers, index, total_referrals)
-        
-        log(f"Referral #{index} completed!", Fore.MAGENTA, index, total_referrals)
-        return True
-        
-    except Exception as e:
-        log(f"Error occurred: {str(e)}.", Fore.RED, index, total_referrals)
-        return False
-
 def main():
-    print_banner()
-    
-    ref_code = get_referral_code()
-    if not ref_code:
-        return
-
-    total_referrals = get_referral_count()
-    if not total_referrals:
-        return
-        
-    target_address = get_target_address()
-    if not target_address:
-        return
-
     proxies = load_proxies()
-    headers = {
-        'Accept': "application/json",
-        'Accept-Encoding': "gzip",
-        'User-Agent': random.choice(ANDROID_USER_AGENTS)
-    }
-    
-    successful_referrals = 0
-    for index in range(1, total_referrals + 1):
-        proxy = get_random_proxy(proxies)
-        proxy_dict = {"http": proxy, "https": proxy} if proxy else None
-        
-        if process_single_referral(index, total_referrals, proxy_dict, target_address, ref_code, headers):
-            successful_referrals += 1
-    
-    print(f"{Fore.MAGENTA}\nCompleted {successful_referrals}/{total_referrals} successful referrals{Style.RESET_ALL}")
 
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print(f"{Fore.YELLOW}\nScript terminated by user{Style.RESET_ALL}")
-    except Exception as e:
-        print(f"{Fore.RED}\nAn unexpected error occurred: {str(e)}{Style.RESET_ALL}")
-    finally:
-        print(f"{Fore.CYAN}\nAll Process completed{Style.RESET_ALL}")
+    if not proxies:
+        return
+
+    # Ask for input parameters
+    amount = ask("How many referrals would you like to process? ")
+    invite_code = ask("Enter referral invite code: ")
+
+    for idx in range(int(amount)):
+        proxy = get_random_proxy(proxies)
+        log(f"Processing referral {idx + 1}/{amount}", Fore.GREEN)
+
+        if not proxy:
+            log("No proxies available, skipping...", Fore.RED)
+            continue
+
+        # Create email, send OTP, verify and register
+        client = TempMailClient(proxy_dict={"http": proxy, "https": proxy})
+        data = client.create_email()
+        email = data.get("address")
+
+        if send_otp(email, proxy_dict={"http": proxy, "https": proxy}, headers=client.headers, current=idx + 1, total=int(amount)):
+            mid = client.create_inbox().get('mid')
+            token = client.get_message_token(mid)
+            message = client.get_message_content(token)
+            otp_code = client.extract_otp(message.get("html_content"))
+
+            if otp_code:
+                address = verify_otp(email, otp_code, generate_password(), proxy_dict={"http": proxy, "https": proxy},
+                                     invite_code=invite_code, headers=client.headers, current=idx + 1, total=int(amount))
+                if address:
+                    daily_claim(address, proxy_dict={"http": proxy, "https": proxy}, headers=client.headers, current=idx + 1, total=int(amount))
+                    auto_send(email, to_address="address_to_send_ari", password="password", proxy_dict={"http": proxy, "https": proxy},
+                              headers=client.headers, current=idx + 1, total=int(amount))
+
+if __name__ == '__main__':
+    print_banner()
+    main()
